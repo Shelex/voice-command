@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: voice-assistant-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:8003
+    depends_on:
+      - backend
+    networks:
+      - voice-assistant-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: voice-assistant-backend
+    ports:
+      - "8003:8003"
+    environment:
+      - NODE_ENV=production
+      - PORT=8003
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - FRONTEND_URL=http://localhost:3000
+      - SITE_URL=${SITE_URL:-http://localhost:3000}
+      - SITE_NAME=${SITE_NAME:-Voice Assistant App}
+    networks:
+      - voice-assistant-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8003/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  voice-assistant-network:
+    driver: bridge
+
+volumes:
+  node_modules_frontend:
+  node_modules_backend:
