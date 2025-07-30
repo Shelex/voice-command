@@ -23,6 +23,13 @@ export const VoiceInput: React.FC = () => {
             stopSpeaking();
 
             try {
+                const audio = new Audio("/mh.mp3");
+                audio.play();
+            } catch (e) {
+                console.log("Could not play command sending sound:", e);
+            }
+
+            try {
                 console.log("VoiceInput: sending message:", command);
                 await sendMessage(command);
             } catch (error) {
